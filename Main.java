@@ -18,6 +18,8 @@ public class Main {
         System.out.println(p.predictClass(new double[]{6.2,2.2,4.5,1.5}));
          */
 
+        new Plotter((List<double[]>) data.get("testInputs"), (List<String>) data.get("testLabels"), p.weights, p.threshold);
+
         Scanner scanner = new Scanner(System.in);
         System.out.println("\n--- Perceptron Prediction Interface ---");
 
