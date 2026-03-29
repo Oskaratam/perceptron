@@ -5,15 +5,13 @@ import java.util.*;
 
 public class PrepareDataset {
 
-    public PrepareDataset() {
-
-    }
-
     public List<String[]> loadDataset(String filePath) {
         List<String[]>  dataset = new ArrayList<String[]>();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            String header = br.readLine();
             while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
                 String[] values = line.split(",");
                 dataset.add(values);
             }
@@ -34,7 +32,7 @@ public class PrepareDataset {
         }
     }
 
-    public void trainTestSplit(String filePath){
+    public Map trainTestSplit(String filePath){
         List<String[]> dataset = this.loadDataset(filePath);
         List<double[]> trainInputs = new ArrayList<>();
         List<double[]> testInputs = new ArrayList<>();
@@ -71,12 +69,7 @@ public class PrepareDataset {
                 }
             }
         }
-
-        System.out.println(Arrays.deepToString(trainInputs.toArray()));
-        System.out.println(trainLabels);
-
-        System.out.println(Arrays.deepToString(testInputs.toArray()));
-        System.out.println(testLabels);
-
+       return Map.of("trainLabels", trainLabels, "trainInputs", trainInputs,
+               "testLabels", testLabels, "testInputs", testInputs);
     }
 }

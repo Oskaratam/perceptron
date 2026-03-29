@@ -1,6 +1,7 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
 public class Perceptron {
     int dimensions;
     double alpha;
@@ -26,12 +27,26 @@ public class Perceptron {
         }
     }
 
-    public int predict(double[] input) {
+    private int predict(double[] input) {
         double net = 0;
         for (int i = 0; i < dimensions; i++) {
             net += weights[i] * input[i];
         }
         return net - this.threshold >= 0 ? 1 : 0;
+    }
+
+    public String predictClass(double[] input) {
+        double net = 0;
+        for (int i = 0; i < dimensions; i++) {
+            net += weights[i] * input[i];
+        }
+        int numericPrediction = net - this.threshold >= 0 ? 1 : 0;
+        for (Map.Entry<String, Integer> entry : label_map.entrySet()) {
+            if (entry.getValue().equals(numericPrediction)) {
+                return entry.getKey();
+            }
+        }
+        return "Unknown";
     }
 
     private void adjustWeigths(int desiredResult, int realResult, double[] input) {
@@ -44,23 +59,34 @@ public class Perceptron {
         this.threshold -= (desiredResult - realResult) * this.alpha;
     }
 
-    public void train(double[][] inputs, String[] labels) {
-        if (inputs.length != labels.length) { throw new IllegalArgumentException("Inputs and labels array must have same length"); }
+    public void train(List<double[]> inputs, List<String> labels) {
+        if (inputs.size() != labels.size()) { throw new IllegalArgumentException("Inputs and labels array must have same length"); }
         int correctAnswers = 0;
-        int numberOfEpochs = 0;
+        int numberOfEpochs = 1;
+        EvaluationMetrics evaluationMetrics = new EvaluationMetrics();
 
-        while (correctAnswers < inputs.length && numberOfEpochs < this.maxNumberOfEpochs) {
+        while (correctAnswers < inputs.size() && numberOfEpochs < this.maxNumberOfEpochs) {
+            List<Integer> predictedClasses = new ArrayList<Integer>();
+            List<Integer> realClasses = new ArrayList<Integer>();
             correctAnswers = 0;
-            for (int i = 0; i < inputs.length; i++) {
-                int desiredResult = label_map.get(labels[i]);
-                int realResult = predict(inputs[i]);
+            double accuracy = 0.0;
+            for (int i = 0; i < inputs.size(); i++) {
+                int desiredResult = label_map.get(labels.get(i));
+                realClasses.add(desiredResult);
+                int realResult = predict(inputs.get(i));
+                predictedClasses.add(realResult);
                 if(desiredResult == realResult) {
                     correctAnswers++;
                 } else {
-                    adjustWeigths(desiredResult, realResult, inputs[i]);
+                    adjustWeigths(desiredResult, realResult, inputs.get(i));
                     adjustThreshold(desiredResult, realResult);
                 }
+                accuracy = evaluationMetrics.measureAccuracy(realClasses, predictedClasses);
             }
+            System.out.println("Epoch number: " + numberOfEpochs);
+            System.out.println("Correct answers: " + correctAnswers + " / " + inputs.size());
+            System.out.println("Accuracy is: " + accuracy + "%");
+            System.out.println("--------------------------------");
             numberOfEpochs++;
         }
     }
