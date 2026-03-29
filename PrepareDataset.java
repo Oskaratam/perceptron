@@ -1,16 +1,15 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PrepareDataset {
 
-    public PrepareDataset(String filePath) {
+    public PrepareDataset() {
 
     }
 
-    private List<String[]> loadDataset(String filePath) {
+    public List<String[]> loadDataset(String filePath) {
         List<String[]>  dataset = new ArrayList<String[]>();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -24,8 +23,60 @@ public class PrepareDataset {
         return dataset;
     }
 
-    public void trainTestSplit(String filPath){
-        double[] inputs;
-        String[] labels;
+    public void shuffleList(ArrayList list) {
+        int lastIndex = list.size() - 1;
+        while(lastIndex > 0){
+           int randomIndex = (int) Math.floor(Math.random() * list.size());
+           Object temp = list.get(lastIndex);
+           list.set(lastIndex, list.get(randomIndex));
+           list.set(randomIndex, temp);
+           lastIndex--;
+        }
+    }
+
+    public void trainTestSplit(String filePath){
+        List<String[]> dataset = this.loadDataset(filePath);
+        List<double[]> trainInputs = new ArrayList<>();
+        List<double[]> testInputs = new ArrayList<>();
+        List<String> trainLabels = new ArrayList<>();
+        List<String> testLabels = new ArrayList<>();
+
+        Map<String, ArrayList<String[]>> classMap = new HashMap<>();
+
+        for(String[] row : dataset) {
+            String label = row[row.length - 1];
+            if(!classMap.containsKey(label)) {
+                classMap.put(label, new ArrayList());
+            }
+            classMap.get(label).add(row);
+
+        }
+
+        for(String label : classMap.keySet()) {
+            ArrayList<String[]> rowsList = classMap.get(label);
+            this.shuffleList(rowsList);
+
+            for (int i = 0; i < rowsList.size(); i++) {
+                String[] row = rowsList.get(i);
+
+                double[] input = new double[row.length - 1];
+                Arrays.setAll(input, j -> Double.parseDouble(row[j]));
+
+                if(i < rowsList.size() * 0.7) {
+                    trainInputs.add(input);
+                    trainLabels.add(label);
+                } else {
+                    testInputs.add(input);
+                    testLabels.add(label);
+                }
+            }
+        }
+
+        System.out.println(Arrays.deepToString(trainInputs.toArray()));
+        System.out.println(trainLabels);
+
+        System.out.println(Arrays.deepToString(testInputs.toArray()));
+        System.out.println(testLabels);
+
     }
 }
